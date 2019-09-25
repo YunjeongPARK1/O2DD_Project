@@ -1,3 +1,15 @@
+'''
+<<<design>>>
+
+1. input 형태 조정 *****
+ 1.-(1) MFCC 파일을 x, y로 구분하여 리스트에 저장
+ (x : 컬럼 차원 리스트, y : 클래스 라벨(1차원 리스트))
+2. input을 받아서 svm kernel function을 바꿔서 돌리기
+ 2-(2) 클래스 여러 개인 부분 조정
+ 2-(3) kernel function 변경
+
+'''
+
 from sklearn import svm
 from sklearn.datasets import make_blobs
 from random import *
@@ -5,33 +17,36 @@ from random import *
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import librosa
+import librosa.display
+from matplotlib.pyplot import specgram
+import os
+import IPython.display as ipd
 
+#.wav 파일을 받아와서 MFCC로 변환
+def wav2mfcc(path):
+    mfccs = []
+    for subdir, dirs, files in os.walk(path):
+        for file in files:
+            try:
+                X, sample_rate = librosa.load(os.path.join(subdir,file), res_type = "kaiser_fast", duration = 2.5, sr = 22050*2, offset = 0.5)
+                mfcc = librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc = 13)
+                y = int(file[7:8])-1
+                arr = mfcc, y
+                mfccs.append(arr)
+                print(mfccs)
+            except ValueError:
+                continue
 
+    return mfccs
 
-'''
-1. input 형태 조정 *****
- 1.-(1) MFCC 파일을 x, y로 구분하여 리스트에 저장
-'''
-
-'''
-<<인풋 샘플>>
-x, y = make_blobs(n_samples=50, centers=2, cluster_std=0.5, random_state=4)
-y = 2 * y - 1
-
-print('x')
-print(x)
-print()
-print('y')
-print(y)
-
-#plt.scatter(x[y == -1, 0], x[y == -1, 1], marker='ㅇ', label=)
-'''
-
-'''
--------------------------------------------------
-                      function
--------------------------------------------------
-'''
+#plot MFCC
+def plot_mfcc(mfccfile):
+    plt.figure(figsize = (20, 15))
+    plt.subplot(3,1,1)
+    librosa.display,specshow(mfccfile, x_axis = "time")
+    plt.ylabel("MFCC")
+    plt.colorbar()
 
 #MFCC csv 파일을  받아와서 리스트에 저장
 def readCSVtoList(csvName):
@@ -135,9 +150,14 @@ def accuracy_score(error,total):
 '''
 
 #input
+'''
 listData = readCSVtoList('output.csv') #전역변수랑 로컬변수랑 이름 같아도 되나?
 x, x_name = get_x(listData)
 y = get_y(listData)
+'''
+x, y = wav2mfcc("C:\\Users\\PARK\\Documents\\19 summer\\O2DD project\\Audio_Speech_Actors_01-24\\")
+
+
 
 #data split
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
